@@ -12,8 +12,9 @@ Usage:
 
 import streamlit as st
 import json
-import sys
-from typing import Optional
+import os
+import time
+from pathlib import Path
 
 # =============================================================================
 # Page Configuration (T041)
@@ -166,6 +167,21 @@ CUSTOM_CSS = """
     border-radius: 8px;
     text-align: center;
 }
+
+.live-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #27ae60;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
 </style>
 """
 
@@ -239,6 +255,25 @@ def render_step_card(step: dict, index: int):
 
 
 # =============================================================================
+# Live File Watcher
+# =============================================================================
+
+def get_watch_file_path():
+    """Get the default watch file path."""
+    return Path("output/live_demo.txt")
+
+
+def read_live_file(file_path: Path) -> str:
+    """Read content from live file if it exists."""
+    if file_path.exists():
+        try:
+            return file_path.read_text(encoding='utf-8')
+        except Exception:
+            return ""
+    return ""
+
+
+# =============================================================================
 # Main Application (T041, T045, T046, T048)
 # =============================================================================
 
@@ -260,10 +295,11 @@ def main():
 
     input_method = st.sidebar.radio(
         "Input Method",
-        ["Upload File", "Paste JSON", "Sample Data"]
+        ["Upload File", "Paste JSON", "Sample Data", "Live Watch"]
     )
 
     steps = []
+    live_refresh_rate = None  # Will be set in Live Watch mode
 
     if input_method == "Upload File":
         # File upload (T045)
@@ -284,6 +320,57 @@ def main():
         )
         if json_input:
             steps = parse_json_lines(json_input)
+
+    elif input_method == "Live Watch":
+        # Live file watching mode
+        st.sidebar.markdown("---")
+        st.sidebar.markdown('<span class="live-indicator"></span> **Live Mode**', unsafe_allow_html=True)
+
+        # Get project root (parent of src/) for absolute path
+        project_root = Path(__file__).parent.parent.resolve()
+        default_watch_file = str(project_root / "output" / "live_demo.txt")
+
+        watch_file = st.sidebar.text_input(
+            "Watch file path",
+            value=default_watch_file,
+            help="Run demo with: python src/agent_executor.py > output/live_demo.txt 2>&1"
+        )
+
+        live_refresh_rate = st.sidebar.slider("Refresh rate (seconds)", 0.5, 5.0, 1.0, 0.5)
+
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("**Instructions:**")
+        st.sidebar.code(f"python src/agent_executor.py > {watch_file} 2>&1", language="bash")
+
+        # Create output directory if needed
+        watch_path = Path(watch_file)
+        if watch_path.parent.name and not watch_path.parent.exists():
+            try:
+                watch_path.parent.mkdir(parents=True, exist_ok=True)
+                st.sidebar.success(f"Created {watch_path.parent}/")
+            except Exception:
+                pass
+
+        # Read and parse the file
+        if watch_path.exists():
+            content = read_live_file(watch_path)
+            steps = parse_json_lines(content)
+
+            # Debug info
+            st.sidebar.success(f"File: {len(content)} chars, {len(steps)} steps found")
+
+            # Show file info
+            mod_time = os.path.getmtime(watch_path)
+            import datetime
+            mod_dt = datetime.datetime.fromtimestamp(mod_time)
+            st.sidebar.info(f"Last updated: {mod_dt.strftime('%H:%M:%S')}")
+
+            # Clear file button
+            if st.sidebar.button("Clear watch file"):
+                watch_path.write_text("")
+                st.rerun()
+        else:
+            st.sidebar.warning(f"Waiting for {watch_file}...")
 
     else:
         # Sample data
@@ -316,16 +403,20 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        # Filter by type
-        st.sidebar.markdown("---")
-        st.sidebar.header("🔍 Filter")
+        # Filter by type (only show in non-live modes to avoid rerun conflicts)
+        if input_method != "Live Watch":
+            st.sidebar.markdown("---")
+            st.sidebar.header("🔍 Filter")
 
-        all_types = list(set(s.get("type", "unknown") for s in steps))
-        selected_types = st.sidebar.multiselect(
-            "Show step types",
-            options=all_types,
-            default=all_types
-        )
+            all_types = list(set(s.get("type", "unknown") for s in steps))
+            selected_types = st.sidebar.multiselect(
+                "Show step types",
+                options=all_types,
+                default=all_types
+            )
+        else:
+            # In Live Watch mode, show all types
+            selected_types = [s.get("type", "unknown") for s in steps]
 
         # Render filtered cards
         st.markdown("---")
@@ -343,6 +434,11 @@ def main():
         for i, (step_type, style) in enumerate(STEP_STYLES.items()):
             with cols[i % 5]:
                 st.markdown(f"{style['icon']} **{style['label']}**")
+
+    # Auto-refresh for Live Watch mode (AFTER display)
+    if input_method == "Live Watch" and live_refresh_rate is not None:
+        time.sleep(live_refresh_rate)
+        st.rerun()
 
 
 if __name__ == "__main__":

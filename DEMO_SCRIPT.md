@@ -354,6 +354,63 @@ streamlit run src/streamlit_viewer.py
 
 ---
 
+## 🎬 Demo 6: Live Watch Mode (Side-by-Side Recording)
+
+**Duration**: ~45 seconds
+**Pattern**: Real-time visualization of terminal output
+
+### What to Say
+
+> "Live Watch mode lets you see the agent's output rendered as styled cards in real-time. This is perfect for side-by-side recordings showing both the terminal and the visual dashboard."
+
+### Setup (Two Windows Side-by-Side)
+
+**Window 1 - Streamlit Viewer:**
+```bash
+streamlit run src/streamlit_viewer.py
+```
+Then select "Live Watch" in the sidebar.
+
+**Window 2 - Terminal:**
+```bash
+python src/agent_executor.py > output/live_demo.txt 2>&1
+```
+
+### How Live Watch Works
+
+1. **File-based communication**: The demo script writes JSON + text to `output/live_demo.txt`
+2. **Streamlit polls the file**: Every 1 second (configurable), Streamlit reads the file
+3. **JSON extraction**: The parser extracts JSON objects from mixed content (ignores plain text lines)
+4. **Card rendering**: Each JSON step becomes a styled card with icon, color, and content
+5. **Auto-refresh**: `st.rerun()` triggers a page refresh to show new content
+
+### Architecture Diagram
+
+```
+┌─────────────────┐     writes to      ┌──────────────────┐
+│  Demo Script    │ ────────────────►  │ live_demo.txt    │
+│  (Terminal)     │                    │ (JSON + text)    │
+└─────────────────┘                    └────────┬─────────┘
+                                                │
+                                                │ reads every 1s
+                                                ▼
+                                       ┌──────────────────┐
+                                       │ Streamlit Viewer │
+                                       │ (Browser)        │
+                                       └──────────────────┘
+```
+
+### Key Code Components
+
+| Component | File | Function |
+|-----------|------|----------|
+| JSON Parser | `streamlit_viewer.py:192-219` | `parse_json_lines()` - extracts JSON from mixed content |
+| File Reader | `streamlit_viewer.py:266-273` | `read_live_file()` - reads file with UTF-8 encoding |
+| Auto-refresh | `streamlit_viewer.py:430-433` | `time.sleep()` + `st.rerun()` - polling loop |
+| Card Renderer | `streamlit_viewer.py:226-254` | `render_step_card()` - HTML card generation |
+
+---
+
 ## 🎯 Quick Reference: All Commands
 
 ```bash
@@ -395,6 +452,113 @@ streamlit run src/streamlit_viewer.py
 - Demos use mock responses - no external API needed
 - If Unicode fails, the UTF-8 wrapper will replace characters
 - Each demo is independent - one failure doesn't affect others
+
+---
+
+## 🔧 Live Watch Troubleshooting Guide
+
+### Problem: "0 chars, 0 steps found"
+
+**Cause**: The watch file is empty or doesn't exist.
+
+**Fix**:
+```bash
+# Run a demo to populate the file
+python src/agent_executor.py > output/live_demo.txt 2>&1
+
+# Verify file has content
+type output\live_demo.txt   # Windows
+cat output/live_demo.txt    # Mac/Linux
+```
+
+### Problem: Cards not displaying (but sidebar shows "X steps found")
+
+**Cause**: Streamlit widget state conflict during auto-refresh.
+
+**Fix**:
+1. Click "Stop" button in top-right of Streamlit
+2. Refresh the browser page (F5)
+3. Re-select "Live Watch" mode
+4. If still broken, restart Streamlit: `Ctrl+C` then `streamlit run src/streamlit_viewer.py`
+
+### Problem: File path shows truncated in sidebar
+
+**Cause**: The text input field is too narrow to show full path.
+
+**Fix**: This is cosmetic only. The full path is:
+```
+C:\Users\segayle\repos\ai_summit\output\live_demo.txt
+```
+
+### Problem: Cards appear then disappear
+
+**Cause**: The "Clear watch file" button was clicked, or the file was overwritten.
+
+**Fix**:
+```bash
+# Re-run demo to repopulate
+python src/agent_executor.py > output/live_demo.txt 2>&1
+```
+
+### Problem: Streamlit says "Waiting for file..."
+
+**Cause**: The output directory or file doesn't exist.
+
+**Fix**:
+```bash
+# Create directory if needed
+mkdir output
+
+# Create empty file
+echo. > output\live_demo.txt   # Windows
+touch output/live_demo.txt     # Mac/Linux
+```
+
+### Problem: JSON parsing errors / garbled output
+
+**Cause**: File encoding mismatch (Windows cp1252 vs UTF-8).
+
+**Fix**: All demos include UTF-8 encoding wrapper. If still failing:
+```bash
+# Check file encoding
+file output/live_demo.txt
+
+# Force UTF-8 output
+python -X utf8 src/agent_executor.py > output/live_demo.txt 2>&1
+```
+
+### Quick Reset Procedure
+
+If Live Watch stops working during the demo, do this quick reset:
+
+1. **Terminal**: `Ctrl+C` to stop Streamlit
+2. **Terminal**: `del output\live_demo.txt` (Windows) or `rm output/live_demo.txt`
+3. **Terminal**: `streamlit run src/streamlit_viewer.py`
+4. **Browser**: Select "Live Watch"
+5. **Second Terminal**: `python src/agent_executor.py > output/live_demo.txt 2>&1`
+
+### Diagnostic Commands
+
+```bash
+# Check if file exists and has content
+dir output\live_demo.txt                    # Windows
+ls -la output/live_demo.txt                 # Mac/Linux
+
+# Count JSON lines in file
+python -c "import json; lines=[l for l in open('output/live_demo.txt') if l.strip().startswith('{')]; print(f'{len(lines)} JSON lines')"
+
+# Test the parser directly
+python -c "
+from src.streamlit_viewer import parse_json_lines
+content = open('output/live_demo.txt').read()
+steps = parse_json_lines(content)
+print(f'Found {len(steps)} steps')
+for s in steps[:3]:
+    print(f'  - {s.get(\"type\")}: {s.get(\"content\")[:40]}...')
+"
+```
+
+---
 
 ### Saving Output for Later
 

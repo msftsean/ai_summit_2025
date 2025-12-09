@@ -1,16 +1,18 @@
 # Feature Specification: Agentic AI Design Pattern Demos
 
-| Status | 🟡 Draft |
-|--------|----------|
+| Status | 🟢 Complete |
+|--------|-------------|
 
 | Version | Date       | Author | Changes                          |
 |---------|------------|--------|----------------------------------|
 | 0.1.0   | 2025-12-08 | Claude | Initial draft                    |
 | 0.2.0   | 2025-12-08 | Claude | Added clarifications (LLM mode)  |
+| 1.0.0   | 2025-12-08 | Claude | Implementation complete - all demos working |
+| 1.1.0   | 2025-12-08 | Claude | Added Live Watch mode for side-by-side recording |
 
 **Feature Branch**: `001-agentic-pattern-demos`
 **Created**: 2025-12-08
-**Status**: Draft
+**Status**: Complete
 **Input**: User description: "Create working demos for 4 agentic AI design patterns using Microsoft Agent Framework"
 
 ## 🔍 Clarifications
@@ -101,6 +103,22 @@ As a developer or presenter, I want to run demos through a Streamlit viewer that
 
 ---
 
+### User Story 6 - Live Watch Mode for Side-by-Side Recording (Priority: P3)
+
+As a presenter, I want to view agent output in real-time as styled cards while the demo runs in a terminal, so that I can record side-by-side videos showing both the terminal output and the visual dashboard.
+
+**Why this priority**: Live Watch enhances presentation for screen recordings but is not required to understand the patterns.
+
+**Independent Test**: Can be fully tested by running a demo with output redirected to a file while Streamlit watches the file and renders cards in real-time.
+
+**Acceptance Scenarios**:
+
+1. **Given** Streamlit viewer is in Live Watch mode, **When** a demo writes output to the watch file, **Then** the viewer displays cards within 1-2 seconds
+2. **Given** the watch file contains mixed JSON and text content, **When** the parser processes it, **Then** only valid JSON objects are rendered as cards (text lines are ignored)
+3. **Given** Live Watch stops displaying cards, **When** the user follows the Quick Reset Procedure, **Then** the viewer resumes displaying cards correctly
+
+---
+
 ### ⚠️ Edge Cases
 
 - What happens when a demo script encounters an import error? The script should fail fast with a clear error message indicating missing dependencies
@@ -128,6 +146,9 @@ As a developer or presenter, I want to run demos through a Streamlit viewer that
 - **FR-013**: A README MUST be provided with setup instructions, usage examples, and expected output samples
 - **FR-014**: A requirements.txt MUST list all dependencies with pinned versions
 - **FR-015**: The optional Streamlit viewer MUST accept JSON output and render formatted cards for all defined step types
+- **FR-017**: The Streamlit viewer MUST support a Live Watch mode that polls a file for new content and auto-refreshes
+- **FR-018**: The Live Watch mode MUST parse mixed JSON/text content, extracting only valid JSON objects for rendering
+- **FR-019**: A DEMO_SCRIPT.md MUST be provided with recording instructions, troubleshooting guide, and talking points for each demo
 
 ### 📦 Key Entities
 
@@ -158,3 +179,48 @@ As a developer or presenter, I want to run demos through a Streamlit viewer that
 - **SC-005**: Developers watching the demos can identify the unique characteristics of each agentic pattern within the first 30 seconds of output
 - **SC-006**: All demos run without requiring cloud API keys; local LLM (Ollama/LM Studio) is optional but utilized when available
 - **SC-007**: The output format allows for easy creation of screen recordings or video embeds for presentations
+
+## 📋 Implementation Summary
+
+### Files Created
+
+| File | Description |
+|------|-------------|
+| `src/agent_executor.py` | Agent-Executor pattern demo (customer support with tool selection) |
+| `src/react_loop.py` | ReAct Loop pattern demo (research agent with think-action-observation) |
+| `src/agent_orchestration.py` | Multi-Agent Orchestration demo (coordinator + specialist agents) |
+| `src/planning_execution.py` | Planning+Execution pattern demo (plan generation + progress tracking) |
+| `src/streamlit_viewer.py` | Streamlit viewer with Live Watch mode for real-time visualization |
+| `src/common/output.py` | Shared output utilities (log_step, step_delay) |
+| `requirements.txt` | Python dependencies |
+| `README.md` | Setup instructions and usage guide |
+| `DEMO_SCRIPT.md` | Recording script with talking points and troubleshooting |
+
+### Key Features Implemented
+
+1. **All 4 demo patterns** execute in under 30 seconds with structured output
+2. **Mock responses** - no cloud API keys required
+3. **UTF-8 encoding fix** for Windows terminal compatibility
+4. **Streamlit viewer** with 4 input modes: Upload, Paste JSON, Sample Data, Live Watch
+5. **Live Watch mode** with file polling, JSON extraction, and auto-refresh
+6. **Comprehensive troubleshooting guide** in DEMO_SCRIPT.md
+
+### Architecture
+
+```
+src/
+├── common/
+│   └── output.py          # Shared utilities (log_step, step_delay)
+├── agent_executor.py      # Demo 1: Agent-Executor
+├── react_loop.py          # Demo 2: ReAct Loop
+├── agent_orchestration.py # Demo 3: Multi-Agent Orchestration
+├── planning_execution.py  # Demo 4: Planning+Execution
+└── streamlit_viewer.py    # Demo 5-6: Viewer + Live Watch
+```
+
+### Live Watch Architecture
+
+```
+Demo Script ──► output/live_demo.txt ──► Streamlit Viewer
+   (writes)          (file)              (polls & renders)
+```
