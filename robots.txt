@@ -1,0 +1,33 @@
+# Disallow all robot crawlers from indexing this repository
+# This is internal training material for AI Summit 2025
+
+User-agent: *
+Disallow: /
+
+# Specifically block common AI/ML crawlers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
