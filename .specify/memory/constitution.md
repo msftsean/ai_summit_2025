@@ -1,50 +1,174 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+==================
+Version change: 1.0.0 → 1.1.0 (Added Documentation Standards section)
+Modified principles: None
+Added sections:
+  - Documentation Standards (new section with emoji, status bar, version table requirements)
+Removed sections: None
+Templates requiring updates:
+  - .specify/templates/plan-template.md: ✅ No changes required (generic template)
+  - .specify/templates/spec-template.md: ✅ No changes required (generic template)
+  - .specify/templates/tasks-template.md: ✅ No changes required (generic template)
+Follow-up TODOs: None
+-->
+
+# Agentic AI Design Pattern Demos Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Demonstration Clarity
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Each demo script MUST be a standalone, self-contained Python file that clearly
+illustrates exactly one agentic AI design pattern. Demos MUST NOT combine multiple
+patterns in a single file. Each script MUST run end-to-end successfully in under
+30 seconds with no external dependencies beyond those declared in requirements.txt.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: The primary purpose is educational demonstration. Mixing patterns
+or creating complex interdependencies defeats the learning objective.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Structured Output Protocol
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+All demo output MUST follow the structured logging format for Streamlit parsing:
+- Use clear delimiters: `[AGENT THINKING]`, `[TOOL CALL]`, `[TOOL RESPONSE]`,
+  `[AGENT OUTPUT]`, `[TURN N]`, `[THOUGHT]`, `[ACTION]`, `[OBSERVATION]`
+- Emit both JSON-parseable output and human-readable formatted text
+- Use progress indicators (✓, ⧗, ⏳, →) for visual clarity
+- Include small delays (0.3-0.5s) between steps for readability in recordings
+- Each logical block (thinking → action → observation) MUST print atomically
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: Output consistency enables the Streamlit viewer to parse and render
+demos uniformly. Screen recording and embedding require predictable, timed output.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Mocked Tool Realism
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+All tools MUST be mocked but MUST return realistic, well-structured JSON responses.
+Tool schemas MUST include:
+- Descriptive `name` field
+- Clear `description` explaining the tool's purpose
+- Complete `parameters` object with JSON Schema type definitions
+- Example responses that mirror real-world API patterns
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Tools MUST NOT require actual API keys or external service calls during demo execution.
+
+**Rationale**: Realistic mocking teaches correct integration patterns without
+requiring environment setup or incurring costs during demonstrations.
+
+### IV. Pattern Fidelity
+
+Each demo MUST faithfully implement its designated agentic pattern:
+- **Agent-Executor**: Clear tool selection, invocation, and response synthesis
+- **ReAct Loop**: Explicit think→action→observation cycles with minimum 3 turns
+- **Multi-Agent Orchestration**: Distinct specialist agents with coordinator routing
+- **Planning+Execution**: Visible plan generation, validation checkpoint, step-by-step execution
+
+Demos MUST NOT oversimplify patterns to the point where the architectural insight is lost.
+
+**Rationale**: Demonstrations serve as reference implementations. Pattern integrity
+ensures viewers learn correct agentic architectures.
+
+### V. Simplicity Over Sophistication
+
+Demos MUST prioritize readability and understandability over production-grade
+complexity. YAGNI applies strictly:
+- No unnecessary abstractions or design patterns beyond the demonstrated concept
+- No configuration systems; hardcode reasonable defaults
+- No extensive error handling unless it illustrates the pattern
+- Keep each script under 300 lines of code (excluding comments)
+
+**Rationale**: These are teaching tools, not production systems. Complexity obscures
+the learning objective.
+
+## Output Standards
+
+All demo scripts MUST implement the `log_step` helper function:
+
+```python
+def log_step(step_type: str, content: str) -> None:
+    """Print structured output for Streamlit parsing."""
+    output = {"type": step_type, "content": content}
+    print(json.dumps(output))
+    print(f"\n[{step_type.upper()}]\n{content}\n")
+```
+
+Step types MUST be one of: `thinking`, `action`, `observation`, `response`, `error`,
+`routing`, `summary`, `planning`, `execution`, `checkpoint`.
+
+JSON output MUST precede human-readable output for each step.
+
+## Documentation Standards
+
+All documentation files (README.md, guides, specs) MUST include the following elements:
+
+### 📋 Required Elements
+
+1. **Emojis**: Use descriptive emojis to enhance visual scanning and section identification:
+   - 🚀 Getting Started / Quick Start
+   - 📦 Installation / Dependencies
+   - 🔧 Configuration / Setup
+   - 📖 Usage / Examples
+   - 🧪 Testing
+   - ⚠️ Warnings / Important Notes
+   - ✅ Success / Completed
+   - ❌ Errors / Failures
+   - 💡 Tips / Best Practices
+   - 🔗 References / Links
+
+2. **Status Bar**: Every document MUST include a status bar at the top showing current state:
+   ```
+   | Status | Description |
+   |--------|-------------|
+   | 🟢 Ready | Document is complete and approved |
+   | 🟡 Draft | Document is in progress |
+   | 🔴 Blocked | Document requires resolution |
+   | 🔵 Review | Document awaiting review |
+   ```
+
+3. **Version Table**: Every document MUST include a version history table:
+   ```
+   | Version | Date | Author | Changes |
+   |---------|------|--------|---------|
+   | 1.0.0 | YYYY-MM-DD | Name | Initial release |
+   | 1.1.0 | YYYY-MM-DD | Name | Added feature X |
+   ```
+
+**Rationale**: Visual elements improve document discoverability and scanability. Status bars
+provide immediate context. Version tables enable change tracking and accountability.
+
+## Development Workflow
+
+1. **File Naming**: Demo scripts MUST use snake_case matching the pattern name:
+   - `agent_executor.py`
+   - `react_loop.py`
+   - `agent_orchestration.py`
+   - `planning_execution.py`
+
+2. **Documentation**: README.md MUST include:
+   - Setup instructions with exact commands
+   - Expected output samples for each demo
+   - Streamlit viewer usage instructions
+   - Status bar and version table (per Documentation Standards)
+
+3. **Dependencies**: requirements.txt MUST list all dependencies with pinned versions.
+   Prefer `autogen` or `autogen-agentchat` for Microsoft Agent Framework integration.
+
+4. **Viewer Integration**: The optional `streamlit_viewer.py` MUST:
+   - Accept JSON output via stdin or file
+   - Render formatted cards with appropriate animations
+   - Support all defined step types
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes informal conventions for this demonstration project.
+Amendments require:
+1. Clear rationale for the change
+2. Impact assessment on existing demos
+3. Version increment following semantic versioning
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+All pull requests MUST verify demos still execute within the 30-second limit and
+produce parseable structured output.
+
+Complexity beyond these principles MUST be explicitly justified in code comments
+referencing the specific principle being relaxed and why.
+
+**Version**: 1.1.0 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-08

@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Demo Output Schema",
+  "description": "JSON Schema for structured demo output consumed by Streamlit viewer",
+  "type": "object",
+  "required": ["type", "content"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "thinking",
+        "action",
+        "observation",
+        "response",
+        "error",
+        "routing",
+        "summary",
+        "planning",
+        "execution",
+        "checkpoint"
+      ],
+      "description": "The type of step being output"
+    },
+    "content": {
+      "type": "string",
+      "description": "Human-readable content for this step"
+    },
+    "timestamp": {
+      "type": "number",
+      "description": "Unix timestamp when step was emitted"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional additional data specific to step type",
+      "properties": {
+        "tool_name": {
+          "type": "string",
+          "description": "Name of tool being called (for action type)"
+        },
+        "tool_params": {
+          "type": "object",
+          "description": "Parameters passed to tool (for action type)"
+        },
+        "turn_number": {
+          "type": "integer",
+          "description": "ReAct turn number (for ReAct pattern)"
+        },
+        "step_number": {
+          "type": "integer",
+          "description": "Plan step number (for planning pattern)"
+        },
+        "total_steps": {
+          "type": "integer",
+          "description": "Total steps in plan (for planning pattern)"
+        },
+        "progress_percent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Overall progress percentage"
+        },
+        "agent_name": {
+          "type": "string",
+          "description": "Name of agent (for orchestration pattern)"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "failed"],
+          "description": "Status indicator for step"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "type": "thinking",
+      "content": "Analyzing user request: 'I want a refund'",
+      "timestamp": 1733673600.123
+    },
+    {
+      "type": "action",
+      "content": "Calling refund_processor with order_id=ORD-12345",
+      "timestamp": 1733673601.456,
+      "metadata": {
+        "tool_name": "refund_processor",
+        "tool_params": {"order_id": "ORD-12345", "reason": "not as described"}
+      }
+    },
+    {
+      "type": "execution",
+      "content": "[2/5] Transforming metadata... ✓",
+      "timestamp": 1733673610.789,
+      "metadata": {
+        "step_number": 2,
+        "total_steps": 5,
+        "status": "completed",
+        "progress_percent": 40
+      }
+    }
+  ]
+}

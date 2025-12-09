@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tool Definition Schema",
+  "description": "JSON Schema for defining mocked tools in demos",
+  "type": "object",
+  "required": ["name", "description", "parameters"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Unique tool identifier in snake_case"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Human-readable description of what the tool does"
+    },
+    "parameters": {
+      "type": "object",
+      "required": ["type", "properties"],
+      "properties": {
+        "type": {
+          "const": "object"
+        },
+        "properties": {
+          "type": "object",
+          "description": "Parameter definitions"
+        },
+        "required": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of required parameter names"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CustomerSupportTools": {
+      "refund_processor": {
+        "name": "refund_processor",
+        "description": "Process a customer refund for an order",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "description": "The order ID to refund"
+            },
+            "reason": {
+              "type": "string",
+              "description": "Reason for the refund"
+            }
+          },
+          "required": ["order_id", "reason"]
+        }
+      },
+      "password_reset": {
+        "name": "password_reset",
+        "description": "Send a password reset email to a customer",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Customer email address"
+            }
+          },
+          "required": ["email"]
+        }
+      }
+    },
+    "ResearchTools": {
+      "search": {
+        "name": "search",
+        "description": "Search the web for information on a topic",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            }
+          },
+          "required": ["query"]
+        }
+      }
+    },
+    "OrchestrationTools": {
+      "check_inventory": {
+        "name": "check_inventory",
+        "description": "Check product availability in inventory",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "product": {"type": "string"},
+                  "quantity": {"type": "integer"}
+                }
+              }
+            }
+          },
+          "required": ["items"]
+        }
+      },
+      "process_payment": {
+        "name": "process_payment",
+        "description": "Process payment for an order",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "amount": {"type": "number"},
+            "card_last_four": {"type": "string"}
+          },
+          "required": ["amount", "card_last_four"]
+        }
+      },
+      "arrange_shipping": {
+        "name": "arrange_shipping",
+        "description": "Arrange shipping for an order",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "items": {"type": "array"},
+            "address": {"type": "string"}
+          },
+          "required": ["items", "address"]
+        }
+      }
+    }
+  }
+}

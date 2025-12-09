@@ -1,0 +1,14 @@
+# Agentic AI Design Pattern Demos - Dependencies
+# Python 3.8+ required
+
+# Microsoft Agent Framework
+autogen-agentchat>=0.4.0
+
+# HTTP requests for LLM detection
+requests>=2.31.0
+
+# Optional: Local LLM support
+ollama>=0.3.0
+
+# Optional: Streamlit visualization
+streamlit>=1.29.0
